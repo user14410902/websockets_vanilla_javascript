@@ -17,6 +17,7 @@ app.get("/", (req, res) => {
   res.sendFile(join(__dirname, "index.html"));
 });
 
+const clients = new Set();
 // 1. Initialize WebSocket Server attached to the HTTP server
 const wss = new WebSocketServer({ noServer: true });
 
@@ -30,6 +31,11 @@ server.on("upgrade", (request, socket, head) => {
 // 3. Handle incoming client connections
 wss.on("connection", (ws) => {
   console.log("New client connected!");
+clients.add(ws);
+
+ws.on('close',()=> {
+clients.delete(ws);
+});
 
   // Send a welcoming hello-world message to the client
   ws.send(JSON.stringify({
@@ -49,6 +55,8 @@ wss.on("connection", (ws) => {
           type: "echo",
           text: `Echo: "${data.text}"`
         }));
+
+        broadcast(`Received chat message ${data.text}`);
       }
     } catch (err) {
       console.log("Received raw message:", rawMessage.toString());
@@ -65,3 +73,11 @@ wss.on("connection", (ws) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is listening on port ${PORT}`);
 });
+
+function broadcast(message) {
+clients.forEach(client=> {
+if (client.readyState === WebSocket.OPEN) {
+client.send(message);
+}
+});
+}

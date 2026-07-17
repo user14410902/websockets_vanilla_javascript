@@ -1,6 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
   // 🌐 BROWSER CLIENT (Vanilla JavaScript)
 
+  const button = document.getElementById("btn");
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    console.log("button clicked");
+
+    const msg = {
+      type: "chat",
+      text: "button clicked",
+    };
+    socket.send(JSON.stringify(msg));
+  });
+
   // 1. Establish a WebSocket connection
   // Tip: Use 'wss://' for secure HTTPS sites, 'ws://' for HTTP
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -27,6 +39,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // Parse the incoming JSON message from the server
       const data = JSON.parse(event.data);
       console.log("Received from server:", data);
+
+      let ul = document.getElementById("messages");
+      let li = document.createElement("li");
+      li.textContent = JSON.stringify(data);
+      ul.appendChild(li);
     } catch (err) {
       // Fallback for raw text payloads
       console.log("Received raw message:", event.data);
